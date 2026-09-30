@@ -1,0 +1,72 @@
+:root{
+  --bg:#F1F4EF; --surface:#FFFFFF; --surface-2:#F6F8F5; --ink:#1B2A22; --muted:#5A6A61; --line:#DBE2DA;
+  --primary:#1F5A44; --primary-ink:#FFFFFF; --primary-soft:#E2EFE8;
+  --board:#1C3B2F; --frame:#8B6B49; --chalk:#F2F1E7; --chalk-dim:#B9C7BD; --butter:#F0C04A;
+  --prot:#2E8B57; --fat:#D9962B; --carb:#2F6DA3;
+  --ok:#2E8B57; --low:#D9962B; --high:#C8483A;
+  --ok-bg:#E3F2E9; --low-bg:#FBF0DA; --high-bg:#F9E3E0;
+  --shadow:0 1px 2px rgba(20,40,30,.06);
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1712; --surface:#17231C; --surface-2:#1C2A22; --ink:#E6EEE8; --muted:#9BADA2; --line:#2B3B31;
+    --primary:#5FBF97; --primary-ink:#0E1A14; --primary-soft:#1F3A2E;
+    --board:#0B1912; --frame:#5A4630; --chalk:#EFEEE3; --chalk-dim:#8FA298; --butter:#F0C04A;
+    --prot:#5FBF97; --fat:#E8B04F; --carb:#6DA9DE;
+    --ok:#5FBF97; --low:#E8B04F; --high:#E7796C;
+    --ok-bg:#1B3327; --low-bg:#3A2F17; --high-bg:#3F2220;
+    --shadow:none;
+  }
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.5;min-height:100%}
+h1,h2,h3{font-family:'Unbounded','Onest',system-ui,sans-serif;font-weight:600;line-height:1.25;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--butter);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+/* Layout & Panels */
+main{padding:24px 0 48px}
+.layout{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:920px){.layout{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+.field{margin-bottom:14px}
+.field>label,.field>.lbl{display:block;font-weight:600;font-size:13px;margin-bottom:6px;color:var(--muted)}
+select,input[type=number]{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+
+/* Chips & Controls */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.stepper{display:flex;gap:8px}
+.stepper button{width:44px;flex:none;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;font-size:18px;cursor:pointer}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:600;font-size:14px}
+.btn.primary{background:var(--primary);color:var(--primary-ink);border-color:var(--primary);width:100%;padding:12px}
+
+/* Chalkboard & Table */
+.board{background:var(--board);color:var(--chalk);border:7px solid var(--frame);border-radius:14px;padding:20px 22px;margin-bottom:18px}
+.board .kcal{margin:10px 0 2px;font-family:'Unbounded',sans-serif;font-weight:600;font-size:clamp(38px,7vw,56px);line-height:1.05;color:var(--butter)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
+th{background:var(--surface-2);text-align:left;padding:10px 12px;font-size:12.5px;color:var(--muted);font-weight:600}
+td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:middle}
+
+/* Nutri & Allergens modules */
+.status.low{color:color-mix(in srgb,var(--low) 55%,var(--ink))}
+.status.high{color:color-mix(in srgb,var(--high) 75%,var(--ink))}
+.nutri-card{margin-top:16px}
+.nutri-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px}
+.al-watch{display:flex;flex-wrap:wrap;gap:6px}
+.al-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer}
+.al-chip[aria-pressed="true"]{background:var(--high-bg);border-color:var(--high);font-weight:600}
+.al-banner{padding:10px 12px;border-radius:10px;background:var(--surface-2);font-size:14px}
+.al-banner.warn{background:var(--high-bg);border-left:3px solid var(--high);font-weight:600}
+.al-banner.ok{background:var(--ok-bg);border-left:3px solid var(--ok)}
+.warn-mark{margin-left:6px;color:var(--high);cursor:help}
+tr.has-watch:not(.mealrow) td:first-child{box-shadow:inset 3px 0 0 var(--high)}
+
+@media print{ .al-watch,.al-lbl,.al-banner,.toolbar,.x{display:none!important} }
+
+
