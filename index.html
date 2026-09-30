@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Калькулятор та планувальник меню для шкільних їдалень</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F1F4EF; --surface:#FFFFFF; --surface-2:#F6F8F5; --ink:#1B2A22; --muted:#5A6A61; --line:#DBE2DA;
+  --primary:#1F5A44; --primary-ink:#FFFFFF; --primary-soft:#E2EFE8;
+  --board:#1C3B2F; --frame:#8B6B49; --chalk:#F2F1E7; --chalk-dim:#B9C7BD; --butter:#F0C04A;
+  --prot:#2E8B57; --fat:#D9962B; --carb:#2F6DA3;
+  --ok:#2E8B57; --low:#D9962B; --high:#C8483A;
+  --ok-bg:#E3F2E9; --low-bg:#FBF0DA; --high-bg:#F9E3E0;
+  --shadow:0 1px 2px rgba(20,40,30,.06);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1712; --surface:#17231C; --surface-2:#1C2A22; --ink:#E6EEE8; --muted:#9BADA2; --line:#2B3B31;
+    --primary:#5FBF97; --primary-ink:#0E1A14; --primary-soft:#1F3A2E;
+    --board:#0B1912; --frame:#5A4630; --chalk:#EFEEE3; --chalk-dim:#8FA298; --butter:#F0C04A;
+    --prot:#5FBF97; --fat:#E8B04F; --carb:#6DA9DE;
+    --ok:#5FBF97; --low:#E8B04F; --high:#E7796C;
+    --ok-bg:#1B3327; --low-bg:#3A2F17; --high-bg:#3F2220;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1712; --surface:#17231C; --surface-2:#1C2A22; --ink:#E6EEE8; --muted:#9BADA2; --line:#2B3B31;
+  --primary:#5FBF97; --primary-ink:#0E1A14; --primary-soft:#1F3A2E;
+  --board:#0B1912; --frame:#5A4630; --chalk:#EFEEE3; --chalk-dim:#8FA298; --butter:#F0C04A;
+  --prot:#5FBF97; --fat:#E8B04F; --carb:#6DA9DE;
+  --ok:#5FBF97; --low:#E8B04F; --high:#E7796C;
+  --ok-bg:#1B3327; --low-bg:#3A2F17; --high-bg:#3F2220;
+  --shadow:none;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.5;min-height:100%}
+h1,h2,h3{font-family:'Unbounded','Onest',system-ui,sans-serif;font-weight:600;line-height:1.25;margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--butter);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+/* header */
+.top{background:var(--primary);color:var(--primary-ink);padding:26px 0 24px}
+:root[data-theme="dark"] .top, :root:not([data-theme="light"]) .top{--top-ink:var(--primary-ink)}
+.top h1{font-size:clamp(20px,3.2vw,30px);max-width:24ch}
+.top p{margin:8px 0 0;max-width:60ch;opacity:.9}
+
+main{padding:24px 0 48px}
+.layout{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:920px){.layout{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+.panel h2{font-size:17px;margin-bottom:14px}
+.field{margin-bottom:14px}
+.field>label,.field>.lbl{display:block;font-weight:600;font-size:13px;margin-bottom:6px;color:var(--muted)}
+select,input[type=number]{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+
+/* category chips */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+
+/* preview */
+.preview{background:var(--primary-soft);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13px}
+.preview .big{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:600}
+.preview .row{display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;color:var(--muted)}
+.preview b{color:var(--ink)}
+.allergens{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px}
+.tag{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--high-bg);color:var(--high);font-weight:600}
+.tag.none{background:var(--ok-bg);color:var(--ok)}
+
+/* stepper */
+.stepper{display:flex;gap:8px}
+.stepper button{width:44px;flex:none;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;font-size:18px;cursor:pointer}
+.stepper input{text-align:center}
+
+/* segmented */
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{display:block;text-align:center;padding:9px 4px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);cursor:pointer;font-size:14px;margin:0;color:var(--ink);font-weight:500}
+.seg input:checked+label{background:var(--primary);color:var(--primary-ink);border-color:var(--primary)}
+.seg input:focus-visible+label{outline:3px solid var(--butter);outline-offset:2px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:600;font-size:14px}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--primary);color:var(--primary-ink);border-color:var(--primary);width:100%;padding:12px}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--high)}
+
+/* chalkboard */
+.board{background:var(--board);color:var(--chalk);border:7px solid var(--frame);border-radius:14px;padding:20px 22px;margin-bottom:18px}
+.board .head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.board h2{color:var(--chalk);font-size:16px;margin:0}
+.board .date{color:var(--chalk-dim);font-size:13px}
+.board .kcal{margin:10px 0 2px;font-family:'Unbounded',sans-serif;font-weight:600;font-size:clamp(38px,7vw,56px);line-height:1.05;color:var(--butter)}
+.board .kcal small{font-size:15px;color:var(--chalk-dim);font-weight:500;margin-left:6px;font-family:'Onest',sans-serif}
+.macros{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;border-top:2px dashed rgba(242,241,231,.3);padding-top:14px}
+.macros div span{display:block;font-size:12px;color:var(--chalk-dim)}
+.macros div strong{font-size:20px;font-weight:700}
+.macros i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.toolbar .spacer{flex:1}
+
+/* table */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
+th{background:var(--surface-2);text-align:left;padding:10px 12px;font-size:12.5px;color:var(--muted);font-weight:600;white-space:nowrap}
+td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:middle}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.mealrow td{background:var(--primary-soft);font-weight:700;border-top:1px solid var(--line)}
+tr.mealrow td.num{font-weight:600}
+.w-in{width:76px;padding:6px 8px;text-align:right;border-radius:8px}
+.x{border:none;background:none;color:var(--high);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px}
+.x:hover{background:var(--high-bg)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);margin-bottom:4px}
+
+/* analysis */
+section.block{margin-top:32px}
+.block>.head{display:flex;justify-content:space-between;align-items:end;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.block>.head h2{font-size:clamp(18px,2.4vw,22px)}
+.block>.head p{margin:4px 0 0;color:var(--muted);max-width:60ch}
+.agepick{min-width:190px}
+.agepick label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:4px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.card h3{font-size:15px;margin-bottom:14px}
+.bar{margin-bottom:16px}
+.bar .lab{display:flex;justify-content:space-between;gap:8px;font-size:14px;margin-bottom:5px}
+.bar .lab span:last-child{color:var(--muted);font-variant-numeric:tabular-nums;font-size:13px}
+.track{position:relative;height:14px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.zone{position:absolute;top:0;bottom:0;left:61.5%;width:23.1%;background:var(--ok-bg)}
+.fill{position:absolute;left:0;top:0;bottom:0;border-radius:8px;transition:width .3s ease}
+.fill.ok{background:var(--ok)}.fill.low{background:var(--low)}.fill.high{background:var(--high)}
+.status{display:inline-block;margin-top:5px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px}
+.status.ok{background:var(--ok-bg);color:var(--ok)}.status.low{background:var(--low-bg);color:var(--low)}.status.high{background:var(--high-bg);color:var(--high)}.status.none{background:var(--surface-2);color:var(--muted)}
+.legend{font-size:12px;color:var(--muted);margin-top:-4px}
+
+.donutbox{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.donutbox svg{width:130px;height:130px;flex:none}
+.donutbox .center{font-family:'Unbounded',sans-serif;font-size:5px;fill:var(--ink);font-weight:600}
+.donutbox .sub{font-size:2.6px;fill:var(--muted)}
+.dlist{flex:1;min-width:150px}
+.dlist div{display:flex;justify-content:space-between;gap:8px;font-size:14px;padding:5px 0;border-bottom:1px solid var(--line)}
+.dlist div:last-child{border:none}
+.dlist small{display:block;color:var(--muted);font-size:12px}
+.dlist i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.verdict{margin-top:14px;padding:10px 12px;border-radius:10px;background:var(--surface-2);font-size:13.5px}
+
+.check{margin-bottom:14px}
+.check h4{margin:0 0 6px;font-size:14px}
+.check ul{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.check li{display:flex;gap:8px;align-items:center;font-size:14px}
+.check li .dot{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none;background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.check li.yes .dot{background:var(--ok);color:var(--primary-ink);border-color:var(--ok)}
+.check li.yes{color:var(--ink)}
+.check li:not(.yes){color:var(--muted)}
+.allergen-list{display:grid;gap:8px}
+.allergen-list div{font-size:14px}
+.allergen-list .tag{margin-right:6px}
+
+/* FAQ */
+.faq{margin-top:40px}
+.faq h2{font-size:clamp(18px,2.4vw,22px);margin-bottom:14px}
+.faq-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+@media (max-width:820px){.faq-grid{grid-template-columns:minmax(0,1fr)}}
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0}
+summary{cursor:pointer;list-style:none;padding:14px 46px 14px 16px;font-weight:600;position:relative}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"";position:absolute;right:18px;top:50%;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:translateY(-70%) rotate(45deg);transition:transform .2s}
+details[open] summary::after{transform:translateY(-30%) rotate(-135deg)}
+details[open] summary{color:var(--primary)}
+details .ans{padding:0 16px 16px;color:var(--muted);font-size:14.5px}
+details .ans p{margin:0 0 8px}
+details .ans p:last-child{margin:0}
+details .ans ul{margin:4px 0 0;padding-left:18px}
+
+footer{padding:0 0 32px;color:var(--muted);font-size:13px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--board);color:var(--chalk);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s;font-size:14px;z-index:10}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+@media print{
+  body{background:#fff;color:#000}
+  .top p,.aside,.toolbar,.x,section.block,.faq,footer,.toast{display:none!important}
+  .layout{display:block}
+  .w-in{border:none;background:none;padding:0;width:auto}
+  .board{border-width:2px;background:#fff;color:#000}
+  .board h2,.board .kcal,.board .date,.macros span{color:#000!important}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>Планувальник меню для шкільних їдалень</h1>
+    <p>Складайте раціон з готових страв, а калорійність, білки, жири й вуглеводи порахуються самі. Нижче — перевірка збалансованості меню.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="layout">
+
+    <!-- Додавання страви -->
+    <aside class="panel aside" aria-labelledby="add-title">
+      <h2 id="add-title">Додати страву</h2>
+      <form id="add-form" autocomplete="off">
+        <div class="field">
+          <span class="lbl">Категорія</span>
+          <div class="chips" id="chips"></div>
+        </div>
+        <div class="field">
+          <label for="dish-select">Страва</label>
+          <select id="dish-select"></select>
+        </div>
+
+        <div class="preview" id="preview" aria-live="polite"></div>
+
+        <div class="field">
+          <label for="weight">Вага порції, г</label>
+          <div class="stepper">
+            <button type="button" id="minus" aria-label="Зменшити на 10 грамів">−</button>
+            <input type="number" id="weight" value="150" min="10" max="1000" step="5" inputmode="numeric" required>
+            <button type="button" id="plus" aria-label="Збільшити на 10 грамів">+</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="lbl">Прийом їжі</span>
+          <div class="seg" id="meal-seg">
+            <input type="radio" name="meal" id="m0" value="Сніданок" checked><label for="m0">Сніданок</label>
+            <input type="radio" name="meal" id="m1" value="Обід"><label for="m1">Обід</label>
+            <input type="radio" name="meal" id="m2" value="Підвечірок"><label for="m2">Підвечірок</label>
+          </div>
+        </div>
+
+        <button class="btn primary" type="submit">Додати до меню</button>
+      </form>
+    </aside>
+
+    <!-- Меню -->
+    <section aria-labelledby="menu-title">
+      <div class="board">
+        <div class="head">
+          <h2 id="menu-title">Меню на день</h2>
+          <span class="date" id="today"></span>
+        </div>
+        <div class="kcal"><span id="total-kcal">0</span><small>ккал за день</small></div>
+        <div class="macros">
+          <div><span><i style="background:var(--prot)"></i>Білки</span><strong id="total-protein">0</strong> г</div>
+          <div><span><i style="background:var(--fat)"></i>Жири</span><strong id="total-fat">0</strong> г</div>
+          <div><span><i style="background:var(--carb)"></i>Вуглеводи</span><strong id="total-carbs">0</strong> г</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn" id="example-btn" type="button">Підставити приклад меню</button>
+        <button class="btn" id="copy-btn" type="button">Скопіювати</button>
+        <button class="btn" id="print-btn" type="button">Друк</button>
+        <span class="spacer"></span>
+        <button class="btn danger" id="clear-btn" type="button">Очистити все</button>
+      </div>
+
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Страва</th>
+              <th class="num">Вага, г</th>
+              <th class="num">Ккал</th>
+              <th class="num">Б, г</th>
+              <th class="num">Ж, г</th>
+              <th class="num">В, г</th>
+              <th><span class="sr-only" style="position:absolute;left:-9999px">Видалити</span></th>
+            </tr>
+          </thead>
+          <tbody id="menu-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- Аналіз збалансованості -->
+  <section class="block" aria-labelledby="an-title">
+    <div class="head">
+      <div>
+        <h2 id="an-title">Чи збалансоване меню?</h2>
+        <p>Порівняйте раціон з орієнтовними нормами для віку учнів. Це підказка для планування, а не медичний висновок.</p>
+      </div>
+      <div class="agepick">
+        <label for="age">Вік учнів</label>
+        <select id="age"></select>
+      </div>
+    </div>
+
+    <div class="cards">
+      <article class="panel card">
+        <h3>Енергія за прийомами їжі</h3>
+        <div id="meal-bars"></div>
+        <p class="legend">Світла зона на шкалі — 80–110% від орієнтиру для цього прийому.</p>
+      </article>
+
+      <article class="panel card">
+        <h3>Частка енергії від білків, жирів і вуглеводів</h3>
+        <div class="donutbox">
+          <svg viewBox="0 0 36 36" role="img" aria-label="Кільцева діаграма співвідношення білків, жирів і вуглеводів" id="donut"></svg>
+          <div class="dlist" id="dlist"></div>
+        </div>
+        <div class="verdict" id="verdict"></div>
+      </article>
+
+      <article class="panel card">
+        <h3>Чек-ліст повноцінного харчування</h3>
+        <div id="checklist"></div>
+      </article>
+    </div>
+
+    <article class="panel card" style="margin-top:16px">
+      <h3>Алергени у сьогоднішньому меню</h3>
+      <div id="allergens" class="allergen-list"></div>
+    </article>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq" aria-labelledby="faq-title">
+    <h2 id="faq-title">Поширені запитання</h2>
+    <div class="faq-grid">
+      <details>
+        <summary>Для кого призначений цей застосунок?</summary>
+        <div class="ans"><p>Для шкільних кухарів, шеф-кухарів, дієтологів, медичних сестер і адміністрації шкіл: усіх, хто складає меню та хоче швидко перевірити його калорійність і баланс поживних речовин. Батьки теж можуть використати його, щоб оцінити шкільний раціон.</p></div>
+      </details>
+      <details>
+        <summary>Як розраховується калорійність і БЖВ?</summary>
+        <div class="ans"><p>У базі для кожної страви вказані калорії, білки, жири й вуглеводи на 100 грам. Програма множить ці числа на вагу порції та ділить на 100.</p><p>Наприклад, 200 г каші з калорійністю 100 ккал/100 г дає 200 ккал.</p></div>
+      </details>
+      <details>
+        <summary>Наскільки точні дані про страви?</summary>
+        <div class="ans"><p>Значення орієнтовні й відповідають типовим рецептам. Реальна калорійність залежить від технології приготування, жирності молока, кількості олії та цукру.</p><p>Для офіційних документів звіряйте результат із технологічними картами вашого закладу.</p></div>
+      </details>
+      <details>
+        <summary>Скільки калорій потрібно школяреві на день?</summary>
+        <div class="ans"><p>Орієнтовно: 6–9 років — близько 1800 ккал, 10–13 років — близько 2300 ккал, 14–18 років — близько 2600 ккал. Точна потреба залежить від зросту, статі та рівня активності.</p><p>У школі дитина зазвичай отримує лише частину добового раціону, тому в аналізі ми порівнюємо кожен прийом з його часткою від добової норми.</p></div>
+      </details>
+      <details>
+        <summary>Як змінити вагу порції?</summary>
+        <div class="ans"><p>Є два способи:</p><ul><li>перед додаванням: введіть вагу вручну або натискайте «+» і «−» (крок 10 г);</li><li>після додавання: змініть число прямо в таблиці меню, і всі підсумки одразу оновляться.</li></ul></div>
+      </details>
+      <details>
+        <summary>Що означають кольори в блоці «Чи збалансоване меню?»</summary>
+        <div class="ans"><ul><li><b>Зелений</b> — прийом їжі в межах 80–110% від орієнтиру;</li><li><b>Жовтий</b> — калорій замало, менше 80%;</li><li><b>Червоний</b> — забагато, більше 110%.</li></ul><p>Порожній прийом їжі показується сірим.</p></div>
+      </details>
+      <details>
+        <summary>Як користуватися відомостями про алергени?</summary>
+        <div class="ans"><p>Під меню програма показує, які поширені алергени (глютен, молоко, яйця, риба) можуть бути в обраних стравах. Це допомагає вчасно попередити дітей з харчовою алергією та їхніх батьків.</p><p>Позначки орієнтовні: завжди перевіряйте склад конкретних продуктів і рецептів.</p></div>
+      </details>
+      <details>
+        <summary>Чи зберігається моє меню?</summary>
+        <div class="ans"><p>Так, меню й обраний вік зберігаються в браузері на цьому пристрої, тож після оновлення сторінки ви нічого не втратите. Дані нікуди не надсилаються.</p><p>Якщо вимкнути збереження в браузері, меню очиститься після закриття сторінки.</p></div>
+      </details>
+      <details>
+        <summary>Як роздрукувати або переслати меню?</summary>
+        <div class="ans"><p>Натисніть «Друк», щоб отримати чисту версію без зайвих елементів. Кнопка «Скопіювати» перенесе меню в буфер обміну як текст, який можна вставити в месенджер чи документ.</p></div>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">Дані про поживну цінність орієнтовні та призначені для планування раціону.</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  // ---------- База страв (на 100 г) ----------
+  var CATS = ['Каші та сніданки','Супи','Гарячі страви','Гарніри','Салати','Напої','Хліб і випічка','Фрукти та молочне'];
+  var G='Глютен', M='Молоко', E='Яйця', F='Риба';
+  function d(id,name,cat,kcal,p,f,c,port,al){return {id:id,name:name,cat:cat,kcal:kcal,p:p,f:f,c:c,port:port,al:al||[]};}
+  var DISHES = [
+    d(1,'Каша гречана розсипчаста','Гарніри',130,4.5,1.2,25,150),
+    d(2,'Каша вівсяна молочна','Каші та сніданки',102,3.2,4.1,14,200,[M,G]),
+    d(3,'Каша манна молочна','Каші та сніданки',98,3.0,3.2,15,200,[M,G]),
+    d(4,'Каша пшоняна з гарбузом','Каші та сніданки',110,3.0,2.5,19,200),
+    d(5,'Каша рисова молочна','Каші та сніданки',97,2.6,2.9,15.5,200,[M]),
+    d(6,'Сирники запечені','Каші та сніданки',220,14,9,20,100,[M,E,G]),
+    d(7,'Омлет паровий','Каші та сніданки',140,9.5,10.5,2,100,[E,M]),
+    d(8,'Сирна запіканка','Каші та сніданки',190,13,8,16,120,[M,E,G]),
+
+    d(9,'Борщ український з капустою','Супи',65,1.8,2.5,8.2,250),
+    d(10,'Курячий суп з вермішеллю','Супи',45,2.8,1.5,5,250,[G]),
+    d(11,'Гороховий суп','Супи',70,3.8,2.0,9.5,250),
+    d(12,'Щі зі свіжої капусти','Супи',42,1.5,2.0,5,250),
+    d(13,'Крем-суп з броколі','Супи',55,2.2,2.5,6,250,[M]),
+
+    d(14,'Котлета куряча парова','Гарячі страви',185,18,8.5,2,90,[G,E]),
+    d(15,'Котлета яловича','Гарячі страви',220,15,14,8,90,[G,E]),
+    d(16,'Хек запечений','Гарячі страви',105,17,3.5,1,90,[F]),
+    d(17,'Тефтелі в томатному соусі','Гарячі страви',150,9,9,8,100,[G,E]),
+    d(18,'Курка тушкована','Гарячі страви',165,20,9,1,100),
+    d(19,'Плов з куркою','Гарячі страви',165,8,6,20,200),
+    d(20,'Овочеве рагу','Гарячі страви',70,1.8,3,9,200),
+
+    d(21,'Макарони відварні','Гарніри',112,3.6,0.4,23,150,[G]),
+    d(22,'Картопляне пюре','Гарніри',90,2,3,14,150,[M]),
+    d(23,'Рис відварний','Гарніри',116,2.4,0.4,25,150),
+
+    d(24,'Салат із свіжої капусти та моркви','Салати',50,1.2,2.1,6.5,60),
+    d(25,'Салат з огірків і помідорів','Салати',45,0.9,3.5,2.8,60),
+    d(26,'Вінегрет','Салати',90,1.5,5.5,9,100),
+    d(27,'Салат із печеного буряка','Салати',70,1.5,3.5,8.5,80),
+
+    d(28,'Компот із сухофруктів','Напої',60,0.2,0,14.5,200),
+    d(29,'Чай з лимоном','Напої',30,0,0,7.5,200),
+    d(30,'Какао на молоці','Напої',70,2.8,2.5,9.5,200,[M]),
+    d(31,'Кисіль ягідний','Напої',55,0.1,0,13.5,200),
+    d(32,'Молоко','Напої',60,3,3.2,4.7,200,[M]),
+
+    d(33,'Хліб пшеничний','Хліб і випічка',240,8,1,48,30,[G]),
+    d(34,'Хліб житній','Хліб і випічка',210,6.5,1.2,42,30,[G]),
+    d(35,'Булочка з маком','Хліб і випічка',330,8,9,54,70,[G,E,M]),
+    d(36,'Печиво вівсяне','Хліб і випічка',400,6,14,64,40,[G,E]),
+
+    d(37,'Яблуко','Фрукти та молочне',47,0.4,0.4,9.8,150),
+    d(38,'Банан','Фрукти та молочне',96,1.5,0.2,21,120),
+    d(39,'Йогурт натуральний','Фрукти та молочне',65,4,3,5,125,[M]),
+    d(40,'Сир кисломолочний з ягодами','Фрукти та молочне',120,11,4,10,100,[M])
+  ];
+  var BYID = {}; DISHES.forEach(function(x){BYID[x.id]=x;});
+  var MEALS = ['Сніданок','Обід','Підвечірок'];
+  var SHARE = {'Сніданок':0.25,'Обід':0.35,'Підвечірок':0.10};
+  var AGES = [
+    {label:'6–9 років',kcal:1800},
+    {label:'10–13 років',kcal:2300},
+    {label:'14–18 років',kcal:2600}
+  ];
+
+  // ---------- Стан ----------
+  var state = {menu:[], age:1};
+  var filterCat = 'Усі';
+  var STORE_KEY = 'school-canteen-menu-v1';
+  try{
+    var saved = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    if(saved && Array.isArray(saved.menu)){
+      state.menu = saved.menu.filter(function(i){return BYID[i.dishId] && i.weight>0 && MEALS.indexOf(i.meal)>-1;});
+      if(typeof saved.age==='number' && AGES[saved.age]) state.age = saved.age;
+    }
+  }catch(e){}
+  function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
+
+  var $ = function(s){return document.querySelector(s);};
+  function fmt(n,dg){return Number(n).toLocaleString('uk-UA',{minimumFractionDigits:dg,maximumFractionDigits:dg});}
+  function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+  function calc(item){
+    var dish = BYID[item.dishId], r = item.weight/100;
+    return {dish:dish,kcal:dish.kcal*r,p:dish.p*r,f:dish.f*r,c:dish.c*r};
+  }
+  var toastTimer;
+  function toast(msg){
+    var t=$('#toast'); t.textContent=msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.classList.remove('show');},2200);
+  }
+
+  // ---------- Форма додавання ----------
+  function renderChips(){
+    var all = ['Усі'].concat(CATS);
+    $('#chips').innerHTML = all.map(function(c){
+      return '<button type="button" class="chip" data-cat="'+c+'" aria-pressed="'+(c===filterCat)+'">'+c+'</button>';
+    }).join('');
+  }
+  function fillSelect(){
+    var list = DISHES.filter(function(x){return filterCat==='Усі'||x.cat===filterCat;});
+    $('#dish-select').innerHTML = list.map(function(x){return '<option value="'+x.id+'">'+x.name+'</option>';}).join('');
+    syncPortion();
+  }
+  function currentDish(){return BYID[parseInt($('#dish-select').value,10)];}
+  function syncPortion(){
+    var dish = currentDish();
+    if(dish){ $('#weight').value = dish.port; }
+    renderPreview();
+  }
+  function renderPreview(){
+    var dish = currentDish(), w = parseFloat($('#weight').value);
+    if(!dish){ $('#preview').innerHTML=''; return; }
+    if(!(w>0)) w=0;
+    var r=w/100;
+    $('#preview').innerHTML =
+      '<div class="big">'+fmt(dish.kcal*r,0)+' ккал</div>'+
+      '<div class="row"><span>Б <b>'+fmt(dish.p*r,1)+'</b></span><span>Ж <b>'+fmt(dish.f*r,1)+'</b></span><span>В <b>'+fmt(dish.c*r,1)+'</b></span></div>'+
+      '<div class="row">На 100 г: '+dish.kcal+' ккал</div>'+
+      '<div class="allergens">'+(dish.al.length? dish.al.map(function(a){return '<span class="tag">'+a+'</span>';}).join('') : '<span class="tag none">Без поширених алергенів</span>')+'</div>';
+  }
+  $('#chips').addEventListener('click',function(e){
+    var b=e.target.closest('.chip'); if(!b) return;
+    filterCat=b.dataset.cat; renderChips(); fillSelect();
+  });
+  $('#dish-select').addEventListener('change',syncPortion);
+  $('#weight').addEventListener('input',renderPreview);
+  function step(dv){
+    var w=parseFloat($('#weight').value)||0;
+    w=Math.min(1000,Math.max(10,w+dv)); $('#weight').value=w; renderPreview();
+  }
+  $('#minus').addEventListener('click',function(){step(-10);});
+  $('#plus').addEventListener('click',function(){step(10);});
+
+  $('#add-form').addEventListener('submit',function(e){
+    e.preventDefault();
+    var dish=currentDish(), w=parseFloat($('#weight').value);
+    var meal=document.querySelector('input[name=meal]:checked').value;
+    if(!dish||!(w>0)){toast('Вкажіть вагу порції більше нуля');return;}
+    state.menu.push({uid:uid(),dishId:dish.id,weight:w,meal:meal});
+    update(); toast('Додано: '+dish.name+' → '+meal);
+  });
+
+  // ---------- Таблиця ----------
+  function renderTable(){
+    var body=$('#menu-body');
+    if(!state.menu.length){
+      body.innerHTML='<tr><td colspan="7"><div class="empty"><b>Меню поки порожнє</b>Оберіть страву ліворуч і натисніть «Додати до меню» або підставте приклад.</div></td></tr>';
+      return;
+    }
+    var html='';
+    MEALS.forEach(function(meal){
+      var items=state.menu.filter(function(i){return i.meal===meal;});
+      if(!items.length) return;
+      var sum=items.reduce(function(s,i){return s+calc(i).kcal;},0);
+      html+='<tr class="mealrow"><td colspan="2">'+meal+'</td><td class="num">'+fmt(sum,1)+'</td><td colspan="4"></td></tr>';
+      items.forEach(function(i){
+        var c=calc(i);
+        html+='<tr>'+
+          '<td>'+c.dish.name+'</td>'+
+          '<td class="num"><input class="w-in" type="number" min="10" max="1000" step="5" value="'+i.weight+'" data-uid="'+i.uid+'" aria-label="Вага, г: '+c.dish.name+'"></td>'+
+          '<td class="num"><b>'+fmt(c.kcal,1)+'</b></td>'+
+          '<td class="num">'+fmt(c.p,1)+'</td>'+
+          '<td class="num">'+fmt(c.f,1)+'</td>'+
+          '<td class="num">'+fmt(c.c,1)+'</td>'+
+          '<td class="num"><button class="x" data-del="'+i.uid+'" aria-label="Видалити: '+c.dish.name+'">✕</button></td>'+
+        '</tr>';
+      });
+    });
+    body.innerHTML=html;
+  }
+  $('#menu-body').addEventListener('click',function(e){
+    var b=e.target.closest('[data-del]'); if(!b) return;
+    state.menu=state.menu.filter(function(i){return i.uid!==b.dataset.del;}); update();
+  });
+  $('#menu-body').addEventListener('change',function(e){
+    var inp=e.target.closest('.w-in'); if(!inp) return;
+    var w=parseFloat(inp.value);
+    if(!(w>0)){ update(); toast('Вага має бути більшою за нуль'); return; }
+    var it=state.menu.filter(function(i){return i.uid===inp.dataset.uid;})[0];
+    if(it){ it.weight=Math.min(1000,w); update(); }
+  });
+
+  // ---------- Підсумки ----------
+  function totals(items){
+    return items.reduce(function(t,i){var c=calc(i);t.kcal+=c.kcal;t.p+=c.p;t.f+=c.f;t.c+=c.c;return t;},{kcal:0,p:0,f:0,c:0});
+  }
+  function renderTotals(){
+    var t=totals(state.menu);
+    $('#total-kcal').textContent=fmt(t.kcal,0);
+    $('#total-protein').textContent=fmt(t.p,1);
+    $('#total-fat').textContent=fmt(t.f,1);
+    $('#total-carbs').textContent=fmt(t.c,1);
+  }
+
+  // ---------- Аналіз ----------
+  function statusOf(pct){return pct<80?'low':(pct<=110?'ok':'high');}
+  var STATUS_TXT={low:'Замало',ok:'У нормі',high:'Забагато',none:'Немає страв'};
+
+  function renderBars(){
+    var daily=AGES[state.age].kcal;
+    $('#meal-bars').innerHTML=MEALS.map(function(meal){
+      var items=state.menu.filter(function(i){return i.meal===meal;});
+      var target=daily*SHARE[meal];
+      var kcal=totals(items).kcal;
+      var pct=target? kcal/target*100 : 0;
+      var st=items.length? statusOf(pct):'none';
+      var width=Math.min(pct,130)/130*100;
+      return '<div class="bar">'+
+        '<div class="lab"><span>'+meal+'</span><span>'+fmt(kcal,0)+' з ~'+fmt(target,0)+' ккал ('+fmt(pct,0)+'%)</span></div>'+
+        '<div class="track"><div class="zone"></div><div class="fill '+(st==='none'?'':st)+'" style="width:'+width+'%"></div></div>'+
+        '<span class="status '+st+'">'+STATUS_TXT[st]+'</span></div>';
+    }).join('');
+  }
+
+  var RANGES={p:[12,20],f:[25,35],c:[50,60]};
+  function renderDonut(){
+    var t=totals(state.menu);
+    var ep=t.p*4, ef=t.f*9, ec=t.c*4, sum=ep+ef+ec;
+    var svg=$('#donut'), list=$('#dlist'), verdict=$('#verdict');
+    var parts=[{k:'p',name:'Білки',col:'var(--prot)',v:ep},{k:'f',name:'Жири',col:'var(--fat)',v:ef},{k:'c',name:'Вуглеводи',col:'var(--carb)',v:ec}];
+    var out='<circle cx="18" cy="18" r="15.9155" fill="none" stroke="var(--surface-2)" stroke-width="4.5"/>';
+    if(sum>0){
+      var acc=0;
+      parts.forEach(function(p){
+        p.pct=p.v/sum*100;
+        out+='<circle cx="18" cy="18" r="15.9155" fill="none" stroke="'+p.col+'" stroke-width="4.5" stroke-dasharray="'+p.pct+' '+(100-p.pct)+'" stroke-dashoffset="'+(25-acc)+'"/>';
+        acc+=p.pct;
+      });
+      out+='<text x="18" y="18.5" text-anchor="middle" class="center">'+fmt(sum,0)+'</text><text x="18" y="22.5" text-anchor="middle" class="sub">ккал з БЖВ</text>';
+    }else{
+      parts.forEach(function(p){p.pct=0;});
+      out+='<text x="18" y="19.5" text-anchor="middle" class="sub">Немає даних</text>';
+    }
+    svg.innerHTML=out;
+    list.innerHTML=parts.map(function(p){
+      var r=RANGES[p.k];
+      return '<div><span><i style="background:'+p.col+'"></i>'+p.name+'<small>орієнтир '+r[0]+'–'+r[1]+'%</small></span><b>'+fmt(p.pct,0)+'%</b></div>';
+    }).join('');
+    if(sum<=0){verdict.textContent='Додайте страви, щоб побачити співвідношення.';return;}
+    var notes=[];
+    parts.forEach(function(p){
+      var r=RANGES[p.k];
+      if(p.pct<r[0]) notes.push(p.name.toLowerCase()+' трохи менше за орієнтир');
+      else if(p.pct>r[1]) notes.push(p.name.toLowerCase()+' трохи більше за орієнтир');
+    });
+    verdict.textContent = notes.length
+      ? 'Що помітно: '+notes.join('; ')+'. Спробуйте замінити одну зі страв.'
+      : 'Співвідношення білків, жирів і вуглеводів у межах орієнтирів. Добре збалансоване меню.';
+  }
+
+  var CHECKS={
+    'Сніданок':[
+      {t:'Каша, запіканка чи омлет',f:function(i){return BYID[i.dishId].cat==='Каші та сніданки';}},
+      {t:'Напій',f:function(i){return BYID[i.dishId].cat==='Напої';}}
+    ],
+    'Обід':[
+      {t:'Суп',f:function(i){return BYID[i.dishId].cat==='Супи';}},
+      {t:'Гаряча страва (м’ясо, птиця, риба)',f:function(i){return BYID[i.dishId].cat==='Гарячі страви';}},
+      {t:'Гарнір',f:function(i){return BYID[i.dishId].cat==='Гарніри';}},
+      {t:'Салат або овочі',f:function(i){var x=BYID[i.dishId];return x.cat==='Салати'||x.id===20;}},
+      {t:'Напій',f:function(i){return BYID[i.dishId].cat==='Напої';}}
+    ],
+    'Підвечірок':[
+      {t:'Фрукт чи молочний продукт',f:function(i){return BYID[i.dishId].cat==='Фрукти та молочне';}}
+    ]
+  };
+  function renderChecklist(){
+    var doneAll=0,totalAll=0;
+    var html=MEALS.map(function(meal){
+      var items=state.menu.filter(function(i){return i.meal===meal;});
+      var lis=CHECKS[meal].map(function(c){
+        var ok=items.some(c.f); totalAll++; if(ok) doneAll++;
+        return '<li class="'+(ok?'yes':'')+'"><span class="dot">'+(ok?'✓':'')+'</span>'+c.t+'</li>';
+      }).join('');
+      return '<div class="check"><h4>'+meal+'</h4><ul>'+lis+'</ul></div>';
+    }).join('');
+    $('#checklist').innerHTML=html+'<div class="verdict">Виконано '+doneAll+' з '+totalAll+' пунктів.</div>';
+  }
+
+  function renderAllergens(){
+    var map={};
+    state.menu.forEach(function(i){
+      BYID[i.dishId].al.forEach(function(a){
+        map[a]=map[a]||[];
+        var n=BYID[i.dishId].name;
+        if(map[a].indexOf(n)<0) map[a].push(n);
+      });
+    });
+    var keys=Object.keys(map);
+    var box=$('#allergens');
+    if(!state.menu.length){box.innerHTML='<div>Додайте страви, і тут з’являться алергени.</div>';return;}
+    if(!keys.length){box.innerHTML='<div><span class="tag none">Не виявлено</span>У вибраних стравах немає поширених алергенів.</div>';return;}
+    box.innerHTML=keys.map(function(a){
+      return '<div><span class="tag">'+a+'</span>'+map[a].join(', ')+'</div>';
+    }).join('');
+  }
+
+  // ---------- Дії ----------
+  var EXAMPLE=[
+    [2,200,'Сніданок'],[30,200,'Сніданок'],[33,30,'Сніданок'],
+    [9,250,'Обід'],[14,90,'Обід'],[1,150,'Обід'],[24,60,'Обід'],[28,200,'Обід'],[34,30,'Обід'],
+    [37,150,'Підвечірок'],[39,125,'Підвечірок']
+  ];
+  $('#example-btn').addEventListener('click',function(){
+    state.menu=EXAMPLE.map(function(r){return {uid:uid(),dishId:r[0],weight:r[1],meal:r[2]};});
+    update(); toast('Приклад меню додано');
+  });
+  $('#clear-btn').addEventListener('click',function(){
+    if(!state.menu.length) return;
+    state.menu=[]; update(); toast('Меню очищено');
+  });
+  $('#print-btn').addEventListener('click',function(){window.print();});
+  $('#copy-btn').addEventListener('click',function(){
+    if(!state.menu.length){toast('Спершу додайте страви');return;}
+    var lines=['Меню на день'];
+    MEALS.forEach(function(meal){
+      var items=state.menu.filter(function(i){return i.meal===meal;});
+      if(!items.length) return;
+      lines.push('', meal+':');
+      items.forEach(function(i){var c=calc(i);lines.push('• '+c.dish.name+', '+i.weight+' г — '+fmt(c.kcal,0)+' ккал');});
+    });
+    var t=totals(state.menu);
+    lines.push('', 'Разом: '+fmt(t.kcal,0)+' ккал, білки '+fmt(t.p,1)+' г, жири '+fmt(t.f,1)+' г, вуглеводи '+fmt(t.c,1)+' г');
+    var text=lines.join('\n');
+    function fallback(){
+      var ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      try{document.execCommand('copy');toast('Меню скопійовано');}catch(e){toast('Не вдалося скопіювати');}
+      document.body.removeChild(ta);
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){toast('Меню скопійовано');},fallback);
+    }else fallback();
+  });
+
+  // вік
+  $('#age').innerHTML=AGES.map(function(a,i){return '<option value="'+i+'">'+a.label+' (~'+a.kcal+' ккал/добу)</option>';}).join('');
+  $('#age').value=state.age;
+  $('#age').addEventListener('change',function(){state.age=parseInt(this.value,10);update();});
+
+  $('#today').textContent=new Date().toLocaleDateString('uk-UA',{weekday:'long',day:'numeric',month:'long'});
+
+  function update(){
+    renderTable(); renderTotals(); renderBars(); renderDonut(); renderChecklist(); renderAllergens(); save();
+  }
+
+  renderChips(); fillSelect(); update();
+})();
+</script>
+</body>
+</html>
